@@ -92,7 +92,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 continue
             if isinstance(channel, interactions.MessageableMixin):
                 async for message in channel.history(limit=0):
-                    if message.author.id in self.passed_members:
+                    if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
                         continue
                     if message.author.id in self.all_members.keys():
                         self.all_members[message.author.id].append(message)
