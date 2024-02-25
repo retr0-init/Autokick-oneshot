@@ -90,11 +90,12 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         channel_count: int = len(all_channels)
         channel_index: int = 1
         channel_display_str: str = ""
+        temp_count: int = 0
         await ctx.send("Autokick setup process started.")
         # Get all message in the guild within the day threshold
         for channel in all_channels:
+            temp_count = 0
             await ctx.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
-            channel_index += 1
             channel_display_str += f"- {channel.name} ({channel.mention})\n"
             perm: interactions.Permissions = ctx.guild.me.channel_permissions(channel)
             if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
@@ -102,6 +103,11 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             if isinstance(channel, interactions.MessageableMixin):
                 try:
                     async for message in channel.history(limit=0):
+                        temp_count += 1
+                        if temp_count % 100 == 0:
+                            await ctx.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention}) \
+                                \nMessage count: {temp_count}({message.jump_url}) \
+                                    \n> {message.content[:100 if len(message.content) > 100 else len(message.content)]}{'...' if len(message.content) > 100 else ''}")
                         if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
                             continue
                         if message.author.id in self.all_members.keys():
@@ -110,6 +116,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                             self.passed_members.append(message.author.id)
                 except:
                     pass
+            channel_index += 1
         await ctx.edit(content="Autokick setup process done!")
         # Sort the message_id's according to the sent timestamp
         for member in self.all_members.keys():
