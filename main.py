@@ -237,8 +237,8 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         for mem in kicked_members:
             mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
             display_str += f"\n- {mem_obj.display_name} ({mem_obj.username})"
-        await ctx.send(display_str)
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
+        await paginator.send(ctx)
 
     @interactions.listen(MemberRemove)
     async def on_memberremove(self, event: MemberRemove):
