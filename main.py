@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 import interactions
 from interactions.api.events import MemberRemove, MessageCreate
+from interactions.ext.paginators import Paginator
 from collections import deque
 import asyncio
 import datetime
@@ -226,7 +227,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             await ctx.send("The Autokick system is not initialised.", ephemeral=True)
             return
         await ctx.defer()
-        display_str: str = "## Members to be kicked"
+        display_str: str = ""
         now: datetime.datetime = interactions.Timestamp.now()
         kicked_members: dict[int, int] = {
             mem: len(self.all_members[mem])
@@ -237,6 +238,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
             display_str += f"\n- {mem_obj.display_name} ({mem_obj.username})"
         await ctx.send(display_str)
+        paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1900)
 
     @interactions.listen(MemberRemove)
     async def on_memberremove(self, event: MemberRemove):
