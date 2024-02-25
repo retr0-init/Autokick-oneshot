@@ -196,11 +196,6 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         if not force and len(self.ignored_roles) == 0:
             await ctx.send("There is no ignored role configured! Please run `setup_roles` command to set it. If you want to continue, please set `force` parameter to `True`.")
             return
-        kicked_members: dict[int, int] = {
-            mem: len(self.all_members[mem])
-            for mem  in self.all_members.keys()
-            if len(self.all_members[mem]) < self.threshold_message
-        }
         self.started = True
         self.kick_task.start()
         await ctx.send("AutoKick system started")
@@ -223,6 +218,24 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         else:
             await ctx.send("Autokick System has not been started yet")
 
+    @module_base.subcommand("show_kick", sub_cmd_description="Display the members to be kicked")
+    @interactions.check(interactions.is_owner())
+    async def command_show_kick(self, ctx: interactions.SlashContext):
+        if not self.initialised:
+            await ctx.send("The Autokick system is not initialised.", ephemeral=True)
+        await ctx.defer()
+        display_str: str = "## Members to be kicked"
+        now: datetime.datetime = interactions.Timestamp.now()
+        kicked_members: dict[int, int] = {
+            mem: len(self.all_members[mem])
+            for mem  in self.all_members.keys()
+            if mem not in self.passed_members and len(self.all_members[mem]) <= self.threshold_message
+        }
+        for mem in kicked_members:
+            mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
+            display_str += f"\n- {mem_obj.display_name} ({mem_obj.username})"
+        await ctx.send(display_str)
+
     @interactions.listen(MemberRemove)
     async def on_memberremove(self, event: MemberRemove):
         '''
@@ -241,7 +254,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         Prepend message to the list
         '''
         if self.initialised:
-            if not event.message.author.bot and event.message.author.id not in self.passed_members:
+            if not event.message.author.bot and event.message.author.id not in self.passed_members and not any(map(event.message.author.has_role, self.ignored_roles)):
                 if event.message.author.id not in self.all_members.keys():
                     self.all_members[event.message.author.id] = deque()
                 self.all_members[event.message.author.id].append(event.message)

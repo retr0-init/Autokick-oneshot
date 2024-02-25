@@ -1,3 +1,7 @@
 # 20240224
 - Modified Continuous AutoKick module to do the oneshot kick.
 - Check whether the message comes from bot account
+
+# 20240225
+- Display the members to be kicked
+- Do not check the members with ignored roles
