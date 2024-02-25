@@ -223,6 +223,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
     async def command_show_kick(self, ctx: interactions.SlashContext):
         if not self.initialised:
             await ctx.send("The Autokick system is not initialised.", ephemeral=True)
+            return
         await ctx.defer()
         display_str: str = "## Members to be kicked"
         now: datetime.datetime = interactions.Timestamp.now()
