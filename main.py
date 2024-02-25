@@ -77,7 +77,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         self.threshold_days = th_days
         self.all_members: dict[int: deque[interactions.Message]] = {mem.id: deque([]) for mem in ctx.guild.members if not mem.bot}
         self.passed_members: deque[int] = deque()
-        all_channels: list = []
+        all_channels: list[interactions.GuildChannel] = []
         for cc in ctx.guild.channels:
             if isinstance(cc, interactions.MessageableMixin):
                 all_channels.append(cc)
@@ -88,13 +88,10 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             #     print(type(cc))
         # Get all message in the guild within the day threshold
         for channel in all_channels:
-            if channel.name == "moderator-only":
-                print("No access")
-                print(channel.permissions_for(ctx.guild.me))
+            perm: interactions.Permissions = ctx.guild.me.channel_permissions(channel)
+            if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
                 continue
-            if isinstance(channel, interactions.MessageableMixin):
-                print("Has access")
-                print(channel.permissions_for(ctx.guild.me))
+            if isinstance(channel.name, interactions.MessageableMixin):
                 async for message in channel.history(limit=0):
                     if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
                         continue

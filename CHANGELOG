@@ -6,3 +6,4 @@
 - Display the members to be kicked
 - Do not check the members with ignored roles
 - Bug fixes
+    - Add channel permission check
