@@ -158,7 +158,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             # if dm_channel is not None:
             #     dm_channel.send(f"您好。由于您在{self.threshold_days}天内在{ctx.guild.name}的发言不足{self.threshold_message}条。根据服务器规则，将把您踢出该服务器。如果您想重返本服务器的话，请重新加入。在此感谢您的理解与支持。祝一切安好。")
             await u.kick(reason=f"From {self.reference_time - datetime.timedelta(days=30)} to {self.reference_time} has less than {self.threshold_message} messages")
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
 
     @interactions.Task.create(interactions.IntervalTrigger(hours=8))
     async def kick_task(self):
@@ -175,7 +175,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 continue
             if any(map(member_obj.has_role, self.ignored_roles)):
                 continue
-            if self.reference_time - member_obj.joined_at < datetime.timedelta(days=self.threshold_days):
+            if self.reference_time - member_obj.joined_at < td:
                 continue
             if len(self.all_members[member]) < self.threshold_message:
                 await self.kick_member(member)
@@ -229,14 +229,16 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         await ctx.defer()
         display_str: str = ""
         now: datetime.datetime = interactions.Timestamp.now()
+        td = datetime.timedelta = datetime.timedelta(days=self.threshold_days)
         kicked_members: dict[int, int] = {
             mem: len(self.all_members[mem])
             for mem  in self.all_members.keys()
-            if mem not in self.passed_members and len(self.all_members[mem]) <= self.threshold_message
+            if mem not in self.passed_members and len(self.all_members[mem]) < self.threshold_message
         }
         for mem in kicked_members:
             mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
-            display_str += f"\n- {mem_obj.display_name} ({mem_obj.username})"
+            if now - mem_obj.joined_at >= td:
+                display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) (≥{self.all_members[mem]} messages)"
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
         await paginator.send(ctx)
 
