@@ -95,13 +95,16 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
                 continue
             if isinstance(channel, interactions.MessageableMixin):
-                async for message in channel.history(limit=0):
-                    if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
-                        continue
-                    if message.author.id in self.all_members.keys():
-                        self.all_members[message.author.id].append(message)
-                    if len(self.all_members[message.author.id]) > th_message:
-                        self.passed_members.append(message.author.id)
+                try:
+                    async for message in channel.history(limit=0):
+                        if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
+                            continue
+                        if message.author.id in self.all_members.keys():
+                            self.all_members[message.author.id].append(message)
+                        if len(self.all_members[message.author.id]) > th_message:
+                            self.passed_members.append(message.author.id)
+                except:
+                    pass
         # Sort the message_id's according to the sent timestamp
         for member in self.all_members.keys():
             self.all_members[member] = deque(sorted(self.all_members[member], key=lambda m: m.timestamp))

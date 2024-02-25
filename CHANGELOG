@@ -9,6 +9,7 @@
     - Add channel permission check
     - Logic to determine the members to be kicked
     - Check instance Logic
+    - Bypass the channel permission failure
 - Use paginator to overcome the page limit
 - Check whether the member has the ignored roles in the setup command
 - Improved show kick command
