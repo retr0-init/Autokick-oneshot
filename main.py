@@ -87,8 +87,10 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 all_channels.extend(posts)
             # else:
             #     print(type(cc))
+        channel_display_str: str = ""
         # Get all message in the guild within the day threshold
         for channel in all_channels:
+            channel_display_str += f"- {channel.name} ({channel.mention})\n"
             perm: interactions.Permissions = ctx.guild.me.channel_permissions(channel)
             if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
                 continue
@@ -103,6 +105,8 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         # Sort the message_id's according to the sent timestamp
         for member in self.all_members.keys():
             self.all_members[member] = deque(sorted(self.all_members[member], key=lambda m: m.timestamp))
+        paginator: Paginator = Paginator.create_from_string(self.bot, channel_display_str, prefix="### Examined channels", page_size=1000)
+        await paginator.send(ctx)
         await ctx.send(f"Setup complete! The member who does not send more than {self.threshold_message} messages in {self.threshold_days} days will be kicked.")
         self.reference_time = now
         self.initialised = True
@@ -238,7 +242,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         for mem in kicked_members:
             mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
             if now - mem_obj.joined_at >= td:
-                display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) (≥{self.all_members[mem]} messages)"
+                display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) (≥{len(self.all_members[mem])} messages)"
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
         await paginator.send(ctx)
 
