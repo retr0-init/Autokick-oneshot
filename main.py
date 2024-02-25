@@ -89,8 +89,12 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         # Get all message in the guild within the day threshold
         for channel in all_channels:
             if channel.name == "moderator-only":
+                print("No access")
+                print(channel.permissions_for(ctx.guild.me))
                 continue
             if isinstance(channel, interactions.MessageableMixin):
+                print("Has access")
+                print(channel.permissions_for(ctx.guild.me))
                 async for message in channel.history(limit=0):
                     if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
                         continue
