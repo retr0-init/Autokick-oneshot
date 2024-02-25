@@ -94,7 +94,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             perm: interactions.Permissions = ctx.guild.me.channel_permissions(channel)
             if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
                 continue
-            if isinstance(channel.name, interactions.MessageableMixin):
+            if isinstance(channel, interactions.MessageableMixin):
                 async for message in channel.history(limit=0):
                     if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
                         continue
@@ -242,7 +242,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         for mem in kicked_members:
             mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
             if now - mem_obj.joined_at >= td:
-                display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) (≥{len(self.all_members[mem])} messages)"
+                display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) ({len(self.all_members[mem])} messages)"
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
         await paginator.send(ctx)
 
