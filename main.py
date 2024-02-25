@@ -110,6 +110,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                             self.passed_members.append(message.author.id)
                 except:
                     pass
+        await ctx.edit(content="Autokick setup process done!")
         # Sort the message_id's according to the sent timestamp
         for member in self.all_members.keys():
             self.all_members[member] = deque(sorted(self.all_members[member], key=lambda m: m.timestamp))
