@@ -13,3 +13,4 @@
 - Use paginator to overcome the page limit
 - Check whether the member has the ignored roles in the setup command
 - Improved show kick command
+- Monitor system setup process
