@@ -93,7 +93,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         await ctx.send("Autokick setup process started.")
         # Get all message in the guild within the day threshold
         for channel in all_channels:
-            await ctx.edit(f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
+            await ctx.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
             channel_index += 1
             channel_display_str += f"- {channel.name} ({channel.mention})\n"
             perm: interactions.Permissions = ctx.guild.me.channel_permissions(channel)
