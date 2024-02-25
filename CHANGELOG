@@ -8,3 +8,4 @@
 - Bug fixes
     - Add channel permission check
 - Use paginator to overcome the page limit
+- Check whether the member has the ignored roles in the setup command

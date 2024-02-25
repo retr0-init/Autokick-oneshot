@@ -76,7 +76,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         await ctx.defer()
         self.threshold_message = th_message
         self.threshold_days = th_days
-        self.all_members: dict[int: deque[interactions.Message]] = {mem.id: deque([]) for mem in ctx.guild.members if not mem.bot}
+        self.all_members: dict[int: deque[interactions.Message]] = {mem.id: deque([]) for mem in ctx.guild.members if not mem.bot and not any(map(mem.has_role, self.ignored_roles))}
         self.passed_members: deque[int] = deque()
         all_channels: list[interactions.GuildChannel] = []
         for cc in ctx.guild.channels:
