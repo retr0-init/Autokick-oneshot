@@ -89,14 +89,14 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             #     print(type(cc))
         channel_count: int = len(all_channels)
         channel_index: int = 1
-        channel_display_str: str = ""
+        # channel_display_str: str = ""
         temp_count: int = 0
-        await ctx.send("Autokick setup process started.")
+        temp_msg: interactions.Message = await ctx.send("Autokick setup process started.")
         # Get all message in the guild within the day threshold
         for channel in all_channels:
             temp_count = 0
-            await ctx.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
-            channel_display_str += f"- {channel.name} ({channel.mention})\n"
+            temp_msg = await temp_msg.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
+            # channel_display_str += f"- {channel.name} ({channel.mention})\n"
             perm: interactions.Permissions = ctx.guild.me.channel_permissions(channel)
             if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
                 continue
@@ -105,7 +105,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                     async for message in channel.history(limit=0):
                         temp_count += 1
                         if temp_count % 100 == 0:
-                            await ctx.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention}) \
+                            temp_msg = await temp_msg.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention}) \
                                 \nMessage count: {temp_count}({message.jump_url}) \
                                     \n> {message.content[:100 if len(message.content) > 100 else len(message.content)]}{'...' if len(message.content) > 100 else ''}")
                         if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
@@ -117,13 +117,13 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 except:
                     pass
             channel_index += 1
-        await ctx.edit(content="Autokick setup process done!")
+        temp_msg = await temp_msg.edit(content="Autokick setup process done!")
         # Sort the message_id's according to the sent timestamp
         for member in self.all_members.keys():
             self.all_members[member] = deque(sorted(self.all_members[member], key=lambda m: m.timestamp))
-        paginator: Paginator = Paginator.create_from_string(self.bot, channel_display_str, prefix="### Examined channels", page_size=1000)
-        await paginator.send(ctx)
-        await ctx.send(f"Setup complete! The member who does not send more than {self.threshold_message} messages in {self.threshold_days} days will be kicked.")
+        # paginator: Paginator = Paginator.create_from_string(self.bot, channel_display_str, prefix="### Examined channels", page_size=1000)
+        # await paginator.send(ctx)
+        await temp_msg.reply(f"Setup complete! The member who does not send more than {self.threshold_message} messages in {self.threshold_days} days will be kicked.")
         self.reference_time = now
         self.initialised = True
 
