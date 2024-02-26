@@ -22,3 +22,4 @@
 - Bug fixes
 - Added "members to be kicked" file upload
 - Fetch channels instead of getting
+- Add the feature to log messages into csv file

@@ -26,6 +26,12 @@ from config import DEV_GUILD
 from typing import Optional, Union
 import tempfile
 import os
+import asyncio
+import csv
+
+import aiofiles
+import aioshutil
+from aiocsv import AsyncReader, AsyncDictReader, AsyncWriter, AsyncDictWriter
 
 '''
 Autokick module
@@ -54,6 +60,8 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
 
     reference_time: datetime.datetime = datetime.datetime(1970, 1, 1)
 
+    folder_name: str = logs
+
     @module_base.subcommand("setup", sub_cmd_description="Setup the autokick feature and generate statistics")
     @interactions.check(interactions.is_owner())
     @interactions.slash_option(
@@ -77,6 +85,10 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         self.initialised = False
         now: interactions.Timestamp = interactions.Timestamp.now()
         await ctx.defer()
+        temp_folder_name: str = f"{os.path.dirname(__file__)}/{self.folder_name}"
+        if await aiofiles.ospath.exists(temp_folder_name):
+            await aioshutil.rmtree(temp_folder_name)
+        await aiofiles.os.mkdir(temp_folder_name)
         self.threshold_message = th_message
         self.threshold_days = th_days
         self.all_members: dict[int: deque[interactions.Message]] = {mem.id: deque([]) for mem in ctx.guild.members if not mem.bot and not any(map(mem.has_role, self.ignored_roles))}
@@ -113,26 +125,30 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             if (perm & interactions.Permissions.VIEW_CHANNEL) == 0:
                 continue
             if isinstance(channel, interactions.MessageableMixin):
-                try:
-                    async for message in channel.history(limit=0):
-                        temp_count += 1
-                        if temp_count % 100 == 0:
-                            if temp_msg is None:
-                                temp_msg = await temp_channel.send(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
-                            else:
-                                await self.bot.wait_until_ready()
-                                temp_msg = await temp_msg.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention}) \
-                                    \nMessage count: {temp_count}({message.jump_url}) \
-                                        \n> {message.content[:100 if len(message.content) > 100 else len(message.content)]}{'...' if len(message.content) > 100 else ''}")
-                        if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
-                            continue
-                        if message.author.id in self.all_members.keys():
-                            self.all_members[message.author.id].append(message)
-                        if len(self.all_members[message.author.id]) > th_message:
-                            self.passed_members.append(message.author.id)
-                        await self.bot.wait_until_ready()
-                except:
-                    pass
+                async with aiofiles.open(temp_folder_name + f"/{channel.id}-{channel.name[0:10 if len(channel.name) >= 10 else len(channel.name)]}.csv", mode="a", encoding="utf-8", newline="") as afp:
+                    writer = AsyncDictWriter(afp, ["user", "content", "timestamp"], restval="NULL", quoting=csv.QUOTE_ALL)
+                    await writer.writeheader()
+                    try:
+                        async for message in channel.history(limit=0):
+                            await writer.writerow({"user": message.author.username, "content": message.content, "timestamp": message.timestamp.timestamp()})
+                            temp_count += 1
+                            if temp_count % 100 == 0:
+                                if temp_msg is None:
+                                    temp_msg = await temp_channel.send(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention})")
+                                else:
+                                    await self.bot.wait_until_ready()
+                                    temp_msg = await temp_msg.edit(content=f"Autokick setup process: {channel_index:04d}/{channel_count}: {channel.name}({channel.mention}) \
+                                        \nMessage count: {temp_count}({message.jump_url}) \
+                                            \n> {message.content[:100 if len(message.content) > 100 else len(message.content)]}{'...' if len(message.content) > 100 else ''}")
+                            if message.author.id in self.passed_members or message.author.id not in self.all_members.keys():
+                                continue
+                            if message.author.id in self.all_members.keys():
+                                self.all_members[message.author.id].append(message)
+                            if len(self.all_members[message.author.id]) > th_message:
+                                self.passed_members.append(message.author.id)
+                            await self.bot.wait_until_ready()
+                    except:
+                        pass
             channel_index += 1
         temp_msg = await temp_msg.edit(content="Autokick setup process done!")
         # Sort the message_id's according to the sent timestamp
@@ -283,19 +299,29 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
         try:
             await paginator.send(ctx)
-            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_", delete=False) as fp:
-                fp.write(str.encode(display_str))
+            async with aiofiles.tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_", delete=False) as fp:
+                await fp.write(str.encode(display_str))
                 temp_filename = fp.name
-            if os.path.exists(temp_filename):
+            if await aiofiles.ospath.exists(temp_filename):
                 await ctx.send("Members to be kicked", file=temp_filename)
-                os.remove(temp_filename)
+                await aiofiles.os.remove(temp_filename)
         except:
-            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_", delete=False) as fp:
-                fp.write(str.encode(display_str))
+            async with aiofiles.tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_", delete=False) as fp:
+                await fp.write(str.encode(display_str))
                 temp_filename = fp.name
-            if os.path.exists(temp_filename):
+            if await aiofiles.ospath.exists(temp_filename):
                 await temp_channel.send("Members to be kicked", file=temp_filename)
-                os.remove(temp_filename)
+                await aiofiles.os.remove(temp_filename)
+
+    @module_base.subcommand("download_log", sub_cmd_description="Download the channel message history")
+    @interactions.check(interactions.is_owner())
+    async def command_download_log(self, ctx: interactions.SlashContext):
+        await ctx.defer()
+        filename: str = ""
+        async with aiofiles.tempfile.NamedTemporaryFile(prefix="AutoKick-log_", suffix=".tar.gz", delete=False) as afp:
+            await aioshutil.make_archive(afp.name[:-7], "gztar", f"{os.path.dirname(__file__)}/{self.folder_name}")
+            filename = afp.name
+        await ctx.send("AutoKick message logs as attached.", file=filename)
 
     @interactions.listen(MemberRemove)
     async def on_memberremove(self, event: MemberRemove):
@@ -315,6 +341,11 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         Prepend message to the list
         '''
         if self.initialised:
+            async with aiofiles.open(temp_folder_name + f"/{channel.id}-{channel.name[0:10 if len(channel.name) >= 10 else len(channel.name)]}.csv", mode="a+", encoding="utf-8", newline="") as afp:
+                writer = AsyncDictWriter(afp, ["user", "content", "timestamp"], restval="NULL", quoting=csv.QUOTE_ALL)
+                if await afp.tell() == 0:
+                    await writer.writeheader()
+                await writer.writerow({"user": event.message.author.username, "content": event.message.content, "timestamp": event.message.timestamp.timestamp()})
             if not event.message.author.bot and event.message.author.id not in self.passed_members and not any(map(event.message.author.has_role, self.ignored_roles)):
                 if event.message.author.id not in self.all_members.keys():
                     self.all_members[event.message.author.id] = deque()
