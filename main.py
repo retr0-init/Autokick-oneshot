@@ -277,11 +277,11 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         try:
             await paginator.send(ctx)
             with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_") as fp:
-                fp.write(display_str)
+                fp.write(str.encode(display_str))
                 await ctx.send("Members to be kicked", file=fp.name)
         except:
             with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_") as fp:
-                fp.write(display_str)
+                fp.write(str.encode(display_str))
                 await temp_channel.send("Members to be kicked", file=fp.name)
 
     @interactions.listen(MemberRemove)
