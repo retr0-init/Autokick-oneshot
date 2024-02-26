@@ -60,7 +60,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
 
     reference_time: datetime.datetime = datetime.datetime(1970, 1, 1)
 
-    folder_name: str = logs
+    folder_name: str = "logs"
 
     @module_base.subcommand("setup", sub_cmd_description="Setup the autokick feature and generate statistics")
     @interactions.check(interactions.is_owner())
