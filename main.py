@@ -258,7 +258,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         await ctx.defer()
         display_str: str = ""
         now: datetime.datetime = interactions.Timestamp.now()
-        td: datetime.timedelta = datetime.timedelta(days=self.threshold_days)
+        tdo: datetime.timedelta = datetime.timedelta(days=self.threshold_days)
         kicked_members: dict[int, int] = {
             mem: len(self.all_members[mem])
             for mem  in self.all_members.keys()
@@ -266,7 +266,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         }
         for mem in kicked_members:
             mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
-            if now - mem_obj.joined_at >= td:
+            if now - mem_obj.joined_at >= tdo:
                 display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) ({len(self.all_members[mem])} messages)"
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
         await paginator.send(ctx)
