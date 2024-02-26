@@ -16,3 +16,6 @@
 - Improved show kick command
 - Monitor system setup process
 - Monitor message process
+
+# 20240226
+- Fix in case message is None
