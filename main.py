@@ -23,6 +23,8 @@ from collections import deque
 import asyncio
 import datetime
 from config import DEV_GUILD
+from typing import Optional, Union
+import tempfile
 
 '''
 Autokick module
@@ -252,6 +254,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
     @module_base.subcommand("show_kick", sub_cmd_description="Display the members to be kicked")
     @interactions.check(interactions.is_owner())
     async def command_show_kick(self, ctx: interactions.SlashContext):
+        temp_channel: interactions.TYPE_MESSAGEABLE_CHANNEL = ctx.channel
         if not self.initialised:
             await ctx.send("The Autokick system is not initialised.", ephemeral=True)
             return
@@ -265,11 +268,21 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             if mem not in self.passed_members and len(self.all_members[mem]) < self.threshold_message
         }
         for mem in kicked_members:
-            mem_obj: interactions.Member = await ctx.guild.fetch_member(mem)
+            mem_obj: Optional[interactions.Member] = await ctx.guild.fetch_member(mem)
+            while mem_obj is None:
+                mem_obj = await ctx.guild.fetch_member(mem)
             if now - mem_obj.joined_at >= tdo:
                 display_str += f"\n- {mem_obj.display_name} ({mem_obj.username}) ({len(self.all_members[mem])} messages)"
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
-        await paginator.send(ctx)
+        try:
+            await paginator.send(ctx)
+            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_") as fp:
+                fp.write(display_str)
+                await ctx.send("Members to be kicked", file=fp.name)
+        except:
+            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_") as fp:
+                fp.write(display_str)
+                await temp_channel.send("Members to be kicked", file=fp.name)
 
     @interactions.listen(MemberRemove)
     async def on_memberremove(self, event: MemberRemove):

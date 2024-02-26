@@ -20,3 +20,4 @@
 # 20240226
 - Fix in case message is None
 - Bug fixes
+- Added "members to be kicked" file upload
