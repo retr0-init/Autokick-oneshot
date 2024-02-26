@@ -82,7 +82,8 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         self.all_members: dict[int: deque[interactions.Message]] = {mem.id: deque([]) for mem in ctx.guild.members if not mem.bot and not any(map(mem.has_role, self.ignored_roles))}
         self.passed_members: deque[int] = deque()
         all_channels: list[interactions.GuildChannel] = []
-        for cc in ctx.guild.channels:
+        fetched_channels: list[interactions.BaseChannel] = await ctx.guild.fetch_channels()
+        for cc in fetched_channels:
             if isinstance(cc, interactions.MessageableMixin):
                 all_channels.append(cc)
             elif isinstance(cc, interactions.GuildForum):
@@ -92,7 +93,10 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
             #     print(type(cc))
         channel_count: int = len(all_channels)
         channel_index: int = 1
-        # channel_display_str: str = ""
+        channel_str_list: list[str] = [f"{ch.name} ({ch.mention})" for ch in all_channels]
+        channel_display_str: str = "- " + '\n- '.join(channel_str_list)
+        paginator: Paginator = Paginator.create_from_string(self.bot, channel_display_str, prefix="### Examined channels", page_size=1000)
+        await paginator.send(ctx)
         temp_count: int = 0
         temp_msg: interactions.Message = await ctx.send("Autokick setup process started.")
         temp_channel: interactions.TYPE_MESSAGEABLE_CHANNEL = ctx.channel
@@ -126,6 +130,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                             self.all_members[message.author.id].append(message)
                         if len(self.all_members[message.author.id]) > th_message:
                             self.passed_members.append(message.author.id)
+                        await self.bot.wait_until_ready()
                 except:
                     pass
             channel_index += 1

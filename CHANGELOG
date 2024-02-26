@@ -21,3 +21,4 @@
 - Fix in case message is None
 - Bug fixes
 - Added "members to be kicked" file upload
+- Fetch channels instead of getting
