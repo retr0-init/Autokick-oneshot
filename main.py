@@ -25,6 +25,7 @@ import datetime
 from config import DEV_GUILD
 from typing import Optional, Union
 import tempfile
+import os
 
 '''
 Autokick module
@@ -255,6 +256,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
     @interactions.check(interactions.is_owner())
     async def command_show_kick(self, ctx: interactions.SlashContext):
         temp_channel: interactions.TYPE_MESSAGEABLE_CHANNEL = ctx.channel
+        temp_filename: str = ""
         if not self.initialised:
             await ctx.send("The Autokick system is not initialised.", ephemeral=True)
             return
@@ -276,13 +278,19 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         paginator: Paginator = Paginator.create_from_string(self.bot, display_str, prefix="## Members to be kicked", page_size=1000)
         try:
             await paginator.send(ctx)
-            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_") as fp:
+            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_", delete=False) as fp:
                 fp.write(str.encode(display_str))
-                await ctx.send("Members to be kicked", file=fp.name)
+                temp_filename = fp.name
+            if os.path.exists(temp_filename):
+                await ctx.send("Members to be kicked", file=temp_filename)
+                os.remove(temp_filename)
         except:
-            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_") as fp:
+            with tempfile.NamedTemporaryFile(suffix=".txt", prefix="kicked_members_", delete=False) as fp:
                 fp.write(str.encode(display_str))
-                await temp_channel.send("Members to be kicked", file=fp.name)
+                temp_filename = fp.name
+            if os.path.exists(temp_filename):
+                await temp_channel.send("Members to be kicked", file=temp_filename)
+                os.remove(temp_filename)
 
     @interactions.listen(MemberRemove)
     async def on_memberremove(self, event: MemberRemove):
