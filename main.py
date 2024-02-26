@@ -30,6 +30,8 @@ import asyncio
 import csv
 
 import aiofiles
+import aiofiles.ospath
+import aiofiles.os
 import aioshutil
 from aiocsv import AsyncReader, AsyncDictReader, AsyncWriter, AsyncDictWriter
 
