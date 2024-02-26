@@ -258,7 +258,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
         await ctx.defer()
         display_str: str = ""
         now: datetime.datetime = interactions.Timestamp.now()
-        td = datetime.timedelta = datetime.timedelta(days=self.threshold_days)
+        td: datetime.timedelta = datetime.timedelta(days=self.threshold_days)
         kicked_members: dict[int, int] = {
             mem: len(self.all_members[mem])
             for mem  in self.all_members.keys()
