@@ -102,6 +102,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 all_channels.append(cc)
             elif isinstance(cc, interactions.GuildForum):
                 posts = await cc.fetch_posts()
+                posts = cc.get_posts()
                 all_channels.extend(posts)
             # else:
             #     print(type(cc))

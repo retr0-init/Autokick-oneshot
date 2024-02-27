@@ -26,3 +26,4 @@
 
 # 20240227
 - Bug fix avoid path string
+- List all posts in a forum channel instead only active ones
