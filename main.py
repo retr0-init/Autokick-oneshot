@@ -130,7 +130,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 async with aiofiles.open(temp_folder_name + f"/{channel.id}.csv", mode="a", encoding="utf-8", newline="") as afp:
                     writer = AsyncDictWriter(afp, ["user", "content", "timestamp"], restval="NULL", quoting=csv.QUOTE_ALL)
                     await writer.writeheader()
-                    await writer.writerow({"user": channel.owner_id if channel.owner_id is not None else "", "content": channel.name, "timestamp": channel.created_at.timestamp()})
+                    await writer.writerow({"user": "", "content": channel.name, "timestamp": channel.created_at.timestamp()})
                     try:
                         async for message in channel.history(limit=0):
                             await writer.writerow({"user": message.author.username, "content": message.content, "timestamp": message.timestamp.timestamp()})
@@ -349,7 +349,7 @@ class ExtRetr0initAutokickOneshot(interactions.Extension):
                 writer = AsyncDictWriter(afp, ["user", "content", "timestamp"], restval="NULL", quoting=csv.QUOTE_ALL)
                 if await afp.tell() == 0:
                     await writer.writeheader()
-                    await writer.writerow({"user": channel.owner_id if channel.owner_id is not None else "", "content": channel.name, "timestamp": channel.created_at.timestamp()})
+                    await writer.writerow({"user": "", "content": event.message.channel.name, "timestamp": event.message.channel.created_at.timestamp()})
                 await writer.writerow({"user": event.message.author.username, "content": event.message.content, "timestamp": event.message.timestamp.timestamp()})
             if not event.message.author.bot and event.message.author.id not in self.passed_members and not any(map(event.message.author.has_role, self.ignored_roles)):
                 if event.message.author.id not in self.all_members.keys():
